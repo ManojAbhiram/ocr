@@ -10,3 +10,4 @@ uvicorn
 opencv-python-headless==4.6.0.66
 scipy==1.11.4
 scikit-image==0.21.0
+python-multipart==0.0.9

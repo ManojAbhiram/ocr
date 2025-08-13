@@ -1,26 +1,50 @@
-FROM python:3.10-slim
+# ==============================
+# 1. Base image with Python
+# ==============================
+FROM python:3.11-slim
 
-# Install system dependencies for PaddleOCR, OpenCV, and pdf2image
+# ==============================
+# 2. Set environment variables
+# ==============================
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# ==============================
+# 3. Install system dependencies
+# ==============================
+# - poppler-utils → required for pdf2image
+# - ffmpeg & libsm6 & libxext6 → needed for OpenCV
 RUN apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libgomp1 \
+    build-essential \
+    poppler-utils \
+    ffmpeg \
     libsm6 \
     libxext6 \
-    libxrender1 \
-    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# ==============================
+# 4. Copy requirements and install Python deps
+# ==============================
 WORKDIR /app
-
-# Copy dependency list
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install PaddleOCR dependencies
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# ==============================
+# 5. Copy application code
+# ==============================
 COPY . .
 
-# Start FastAPI
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+# ==============================
+# 6. Expose FastAPI port
+# ==============================
+EXPOSE 8000
+
+# ==============================
+# 7. Run FastAPI with uvicorn
+# ==============================
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
